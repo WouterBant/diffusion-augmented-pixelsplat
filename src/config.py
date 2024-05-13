@@ -10,6 +10,7 @@ from .loss import LossCfgWrapper
 from .model.decoder import DecoderCfg
 from .model.encoder import EncoderCfg
 from .model.model_wrapper import OptimizerCfg, TestCfg, TrainCfg
+from .model.postprocessor import PostprocessorCfg
 
 
 @dataclass
@@ -23,6 +24,7 @@ class CheckpointingCfg:
 class ModelCfg:
     decoder: DecoderCfg
     encoder: EncoderCfg
+    postprocessor: PostprocessorCfg
 
 
 @dataclass

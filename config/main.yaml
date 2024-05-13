@@ -3,6 +3,7 @@ defaults:
   - optional dataset/view_sampler_dataset_specific_config: ${dataset/view_sampler}_${dataset}
   - model/encoder: epipolar
   - model/decoder: splatting_cuda
+  - model/postprocessor: none
   - loss: [mse]
 
 wandb:

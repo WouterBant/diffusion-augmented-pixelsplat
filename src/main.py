@@ -27,6 +27,7 @@ with install_import_hook(
     from src.model.decoder import get_decoder
     from src.model.encoder import get_encoder
     from src.model.model_wrapper import ModelWrapper
+    from src.model.postprocessor import get_postprocessor
 
 
 def cyan(text: str) -> str:
@@ -117,6 +118,7 @@ def train(cfg_dict: DictConfig):
         get_decoder(cfg.model.decoder, cfg.dataset),
         get_losses(cfg.loss),
         step_tracker,
+        get_postprocessor(cfg.model.postprocessor)
     )
     data_module = DataModule(
         cfg.dataset,

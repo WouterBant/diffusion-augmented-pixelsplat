@@ -36,6 +36,7 @@ from ..visualization.validation_in_3d import render_cameras, render_projections
 from .decoder.decoder import Decoder, DepthRenderingMode
 from .encoder import Encoder
 from .encoder.visualization.encoder_visualizer import EncoderVisualizer
+from .postprocessor import Postprocessor, PostprocessorCfg
 
 
 @dataclass
@@ -77,6 +78,7 @@ class ModelWrapper(LightningModule):
     test_cfg: TestCfg
     train_cfg: TrainCfg
     step_tracker: StepTracker | None
+    postprocessor: Postprocessor
 
     def __init__(
         self,
@@ -88,6 +90,7 @@ class ModelWrapper(LightningModule):
         decoder: Decoder,
         losses: list[Loss],
         step_tracker: StepTracker | None,
+        postprocessor: Postprocessor
     ) -> None:
         super().__init__()
         self.optimizer_cfg = optimizer_cfg
@@ -104,6 +107,8 @@ class ModelWrapper(LightningModule):
 
         # This is used for testing.
         self.benchmarker = Benchmarker()
+
+        self.postprocessor = postprocessor
 
     def training_step(self, batch, batch_idx):
         batch: BatchedExample = self.data_shim(batch)
@@ -180,6 +185,10 @@ class ModelWrapper(LightningModule):
                 color.append(output.color)
             color = torch.cat(color, dim=1)
 
+        print(color.shape)
+        with self.benchmarker.time("postprocessor", num_calls=v):
+            color_postprocessed = self.postprocessor.forward(color)
+
         # Save images.
         (scene,) = batch["scene"]
         name = get_cfg()["wandb"]["name"]
@@ -190,6 +199,8 @@ class ModelWrapper(LightningModule):
             save_image(color, path / scene / f"context/{index:0>6}.png")
         for index, color in zip(batch["target"]["index"][0], batch["target"]["image"][0]):
             save_image(color, path / scene / f"target/{index:0>6}.png")
+        for index, color in zip(batch["target"]["index"][0], color_postprocessed[0]):
+            save_image(color, path / scene / f"color_postprocessed/{index:0>6}.png")
         
 
     def on_test_end(self) -> None:
